@@ -3,13 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Herramienta académica de Mercado de Capitales para conocer acciones colombianas y simular inversiones.">
-  <title>Asesores de Inversión | UNIPAZ</title>
+  <meta name="description" content="Horizonte Capital UNIPAZ: conozca acciones colombianas, su perfil de inversión y explore escenarios educativos.">
+  <title>Horizonte Capital | Asesores de Inversión — UNIPAZ</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
       --marino: #16234F;
+      --marino-profundo: #101a3c;
       --verde: #2E9E5B;
+      --verde-claro: #e8f5ed;
       --azul-claro: #D7E3FA;
       --fondo: #fff;
       --texto: #20283a;
@@ -17,9 +19,11 @@
       --borde: #dce2eb;
       --rojo: #c62828;
       --amarillo: #fff4cc;
+      --sombra: 0 16px 44px rgba(22,35,79,.08);
     }
     * { box-sizing: border-box; }
-    body { margin: 0; color: var(--texto); background: #f6f8fc; font-family: Calibri, Arial, sans-serif; line-height: 1.5; }
+    html { scroll-behavior: smooth; scroll-padding-top: 1rem; }
+    body { margin: 0; color: var(--texto); background: #f5f7fb; font-family: Calibri, Arial, sans-serif; line-height: 1.55; }
     h1, h2, h3 { color: var(--marino); font-family: Georgia, "Times New Roman", serif; line-height: 1.2; }
     h1 { margin: 0 0 .45rem; font-size: clamp(2rem, 5vw, 3rem); }
     h2 { margin: 0 0 1rem; font-size: clamp(1.45rem, 3vw, 2rem); }
@@ -27,15 +31,42 @@
     p { margin: .4rem 0; }
     button, input, select { font: inherit; }
     button { cursor: pointer; }
-    .hero { color: white; background: var(--marino); padding: 2.5rem max(1rem, calc((100% - 1120px) / 2)); }
+    .hero { position: relative; overflow: hidden; color: white; background: radial-gradient(ellipse at 82% 25%, rgba(65,111,190,.34), transparent 34%), linear-gradient(125deg, var(--marino-profundo), var(--marino) 65%, #233d78); padding: 0 max(1rem, calc((100% - 1160px) / 2)) 3.4rem; }
+    .hero::after { position: absolute; right: -9rem; bottom: -18rem; width: 35rem; height: 35rem; border: 1px solid rgba(255,255,255,.1); border-radius: 50%; content: ""; pointer-events: none; }
     .hero h1, .hero h2 { color: white; }
-    .hero .slogan { color: #dce6ff; font-size: 1.2rem; }
-    .disclaimer { max-width: 850px; margin-top: 1.25rem; padding: .75rem 1rem; border-left: 4px solid var(--verde); background: rgba(255,255,255,.1); }
-    main { width: min(1120px, calc(100% - 2rem)); margin: 1.5rem auto; }
-    section { margin: 1.25rem 0; padding: clamp(1rem, 3vw, 1.6rem); border: 1px solid var(--borde); border-radius: 16px; background: var(--fondo); box-shadow: 0 5px 18px rgba(22,35,79,.05); }
+    .hero .slogan { margin: .8rem 0 1rem; color: #dce6ff; font-size: clamp(1.05rem, 2vw, 1.3rem); letter-spacing: .01em; }
+    .hero-inner, .topbar, .hero-content { position: relative; z-index: 1; width: min(1160px, 100%); margin: 0 auto; }
+    .topbar { display: flex; min-height: 80px; align-items: center; justify-content: space-between; gap: 1rem; border-bottom: 1px solid rgba(255,255,255,.16); }
+    .brand { display: flex; align-items: center; gap: .75rem; color: white; text-decoration: none; }
+    .brand-mark { display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid rgba(255,255,255,.32); border-radius: 13px; color: #bde8cc; background: rgba(255,255,255,.1); font-size: .86rem; font-weight: 800; letter-spacing: -.06em; }
+    .brand-name { display: block; font-size: .98rem; font-weight: 700; }
+    .brand-caption { display: block; color: #c5d2f3; font-size: .76rem; }
+    .site-nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: .35rem; }
+    .site-nav a { padding: .5rem .7rem; border-radius: 7px; color: #e4eaff; font-size: .9rem; text-decoration: none; }
+    .site-nav a:hover, .site-nav a:focus-visible { color: white; background: rgba(255,255,255,.12); }
+    .hero-content { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(250px, .75fr); align-items: center; gap: 3rem; padding-top: 3.5rem; }
+    .hero-copy { max-width: 690px; }
+    .eyebrow { margin: 0 0 .65rem; color: var(--verde); font-size: .76rem; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+    .hero .eyebrow { color: #a9e4bd; }
+    .hero h1 { max-width: 700px; margin-bottom: .35rem; font-size: clamp(2.35rem, 5vw, 4.1rem); letter-spacing: -.035em; }
+    .hero-description { max-width: 580px; color: #e0e7f7; font-size: 1.05rem; }
+    .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .8rem; margin-top: 1.4rem; }
+    .hero-actions .btn { padding: .8rem 1.15rem; color: var(--marino); background: white; text-decoration: none; }
+    .hero-actions .text-link { padding: .5rem; color: #e4eaff; text-decoration: none; }
+    .hero-art { position: relative; max-width: 380px; justify-self: end; padding: 1.25rem; border: 1px solid rgba(255,255,255,.2); border-radius: 22px; background: linear-gradient(145deg, rgba(255,255,255,.13), rgba(255,255,255,.04)); box-shadow: 0 24px 60px rgba(4,11,33,.2); backdrop-filter: blur(8px); }
+    .hero-art-label { color: #c5d2f3; font-size: .78rem; }
+    .hero-art-title { display: block; margin: .2rem 0 .5rem; color: white; font-family: Georgia, "Times New Roman", serif; font-size: 1.22rem; }
+    .hero-art svg { display: block; width: 100%; height: auto; }
+    .art-note { display: flex; align-items: center; gap: .5rem; color: #d9e3fa; font-size: .76rem; }
+    .art-note::before { width: 7px; height: 7px; border-radius: 50%; background: #72d394; content: ""; }
+    .disclaimer { max-width: 720px; margin: 1.5rem 0 0; padding: .6rem .8rem; border: 1px solid rgba(255,255,255,.18); border-left: 3px solid #72d394; border-radius: 0 8px 8px 0; color: #e4eaff; background: rgba(5,14,42,.22); font-size: .88rem; }
+    main { width: min(1160px, calc(100% - 2rem)); margin: 1.7rem auto; }
+    section { margin: 1.25rem 0; padding: clamp(1.2rem, 3vw, 2rem); border: 1px solid #e6eaf1; border-radius: 18px; background: var(--fondo); box-shadow: var(--sombra); }
+    section > .eyebrow { margin-bottom: .35rem; }
+    section > h2 { margin-bottom: 1.15rem; }
     .team-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
-    .advisor { display: flex; align-items: center; gap: 1rem; padding: 1rem; border-radius: 12px; background: #f5f7fc; }
-    .advisor img, .avatar { width: 76px; height: 76px; flex: 0 0 76px; border-radius: 50%; object-fit: cover; }
+    .advisor { display: flex; align-items: center; gap: 1rem; padding: 1.1rem; border: 1px solid #edf0f5; border-radius: 14px; background: linear-gradient(135deg, #fff, #f7f9fd); }
+    .advisor img, .avatar { width: 84px; height: 84px; flex: 0 0 84px; border: 3px solid white; border-radius: 50%; object-fit: cover; box-shadow: 0 4px 15px rgba(22,35,79,.14); }
     .avatar { display: grid; place-items: center; color: white; background: var(--marino); font-size: 1.25rem; font-weight: 700; }
     .advisor p { margin: .15rem 0; }
     .muted, .small { color: var(--gris); }
@@ -53,8 +84,8 @@
     .btn.secondary { color: var(--marino); border: 1px solid var(--marino); background: white; }
     .btn.green { background: var(--verde); }
     .btn:disabled { cursor: not-allowed; opacity: .5; }
-    .profile-result { margin-top: 1rem; padding: 1rem; border-radius: 10px; background: var(--azul-claro); }
-    .notice { margin: 0 0 1rem; padding: .9rem 1rem; border: 1px solid #e6c55c; border-radius: 8px; background: var(--amarillo); color: #493b10; font-weight: 700; }
+    .profile-result { margin-top: 1rem; padding: 1.2rem; border: 1px solid #cbd9f4; border-radius: 12px; background: linear-gradient(135deg, #edf3ff, #f8faff); }
+    .notice { margin: 0 0 1rem; padding: .9rem 1rem; border: 1px solid #e6c55c; border-radius: 10px; background: var(--amarillo); color: #493b10; font-weight: 700; }
     .table-wrap { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; }
     th, td { padding: .65rem .55rem; border-bottom: 1px solid var(--borde); text-align: left; vertical-align: middle; }
@@ -68,7 +99,7 @@
     .risk-low { color: #126337; } .risk-medium { color: #8a5a00; } .risk-high { color: #a51f1f; }
     .data-meta { margin-top: .65rem; }
     .chart-box { position: relative; min-height: 260px; margin-top: 1rem; }
-    .trm { margin: .75rem 0; padding: .75rem; border-radius: 8px; background: #f1f4fa; }
+    .trm { margin: .75rem 0; padding: .8rem 1rem; border: 1px solid #e6eaf1; border-radius: 10px; background: #f7f9fd; }
     .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
     .field { display: flex; flex-direction: column; gap: .3rem; }
     .field input, .field select { width: 100%; min-height: 42px; padding: .55rem .65rem; border: 1px solid #b8c2d2; border-radius: 7px; color: var(--texto); background: white; }
@@ -80,21 +111,45 @@
     .tab { min-height: 46px; padding: .55rem; border: 1px solid var(--borde); border-radius: 8px; color: var(--marino); background: white; font-weight: 700; }
     .tab[aria-selected="true"] { color: white; border-color: var(--marino); background: var(--marino); }
     .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: .7rem; margin-top: 1rem; }
-    .metric { padding: .8rem; border-radius: 9px; background: #f1f4fa; }
+    .metric { padding: .9rem; border: 1px solid #e6eaf1; border-radius: 12px; background: #f8f9fc; }
     .metric strong { display: block; color: var(--marino); font-size: 1.1rem; }
     .scenario-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .7rem; margin-top: 1rem; }
     .scenario { padding: .85rem; border: 1px solid var(--borde); border-radius: 9px; }
     .scenario h3 { font-family: Calibri, Arial, sans-serif; font-size: 1rem; }
     .error-text { color: var(--rojo); font-weight: 700; }
-    footer { padding: 1.5rem 1rem; color: white; background: var(--marino); text-align: center; }
+    footer { margin-top: 2.5rem; padding: 1.8rem 1rem; color: white; background: var(--marino-profundo); text-align: center; }
+    .footer-brand { margin-bottom: .3rem; font-family: Georgia, "Times New Roman", serif; font-size: 1.05rem; }
+    .section-intro { max-width: 760px; margin: -.5rem 0 1rem; color: var(--gris); }
+    .guide-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: .8rem; margin: 1.2rem 0 1.5rem; }
+    .guide-step { display: flex; align-items: flex-start; gap: .7rem; padding: .85rem; border: 1px solid #e6eaf1; border-radius: 12px; background: white; }
+    .guide-number { display: grid; width: 28px; height: 28px; flex: 0 0 28px; place-items: center; border-radius: 9px; color: var(--marino); background: var(--azul-claro); font-size: .82rem; font-weight: 800; }
+    .guide-step strong { display: block; color: var(--marino); font-size: .92rem; }
+    .guide-step span:last-child { color: var(--gris); font-size: .82rem; }
+    .simulation-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+    .simulation-heading .badge { margin-top: .25rem; }
+    .section-anchor { scroll-margin-top: 1rem; }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+    }
     @media (max-width: 700px) {
       main { width: min(100% - 1rem, 1120px); margin: .5rem auto; }
-      .hero { padding: 1.8rem 1rem; }
+      .hero { padding: 0 .85rem 2rem; }
+      .topbar { min-height: 70px; align-items: flex-start; flex-direction: column; justify-content: center; gap: .4rem; padding: .7rem 0; }
+      .brand-mark { width: 36px; height: 36px; }
+      .site-nav { width: 100%; justify-content: flex-start; gap: .1rem; overflow-x: auto; }
+      .site-nav a { padding: .35rem .5rem; font-size: .82rem; white-space: nowrap; }
+      .hero-content { grid-template-columns: 1fr; gap: 1.3rem; padding-top: 2rem; }
+      .hero h1 { font-size: clamp(2.1rem, 11vw, 3rem); }
+      .hero-art { width: min(100%, 360px); justify-self: start; }
+      .disclaimer { margin-top: 1rem; }
       section { margin: .65rem 0; padding: 1rem; border-radius: 12px; }
       .team-grid, .form-grid { grid-template-columns: 1fr; }
       .advisor { align-items: flex-start; }
       .tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .scenario-grid { grid-template-columns: 1fr; }
+      .guide-strip { grid-template-columns: 1fr; }
+      .simulation-heading { flex-direction: column; gap: .2rem; }
       .table-wrap { overflow: visible; }
       table, thead, tbody, tr, th, td { display: block; }
       thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
@@ -107,6 +162,11 @@
     @media print {
       body { color: #111; background: white; font-size: 10pt; }
       .hero { padding: 1rem; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .topbar { min-height: auto; padding: 0 0 .5rem; }
+      .site-nav, .hero-actions, .hero-art { display: none !important; }
+      .hero-content { display: block; padding-top: 1rem; }
+      .hero h1 { font-size: 25pt; }
+      .disclaimer { margin-top: .5rem; }
       main { width: 100%; margin: 0; }
       section { margin: .5rem 0; padding: .7rem; box-shadow: none; break-inside: avoid; }
       .button-row, .tabs, #profileControls, .choice-list, #calculateBtn { display: none !important; }
@@ -126,19 +186,69 @@
 </head>
 <body>
   <header class="hero">
-    <h1 id="firmName">[NOMBRE DE LA FIRMA] Asesores de Inversión</h1>
-    <p class="slogan" id="slogan">[ESLOGAN]</p>
-    <p class="disclaimer">Herramienta académica. No constituye asesoría ni recomendación profesional de inversión.</p>
+    <div class="topbar">
+      <a class="brand" href="#" aria-label="Horizonte Capital, inicio">
+        <span class="brand-mark" aria-hidden="true">HC</span>
+        <span><span class="brand-name" id="brandName">Horizonte Capital</span><span class="brand-caption">Asesores de Inversión · UNIPAZ</span></span>
+      </a>
+      <nav class="site-nav" aria-label="Navegación principal">
+        <a href="#equipo">El equipo</a>
+        <a href="#perfil">Su perfil</a>
+        <a href="#mercado">Mercado colombiano</a>
+        <a href="#simulador">Simulador</a>
+      </nav>
+    </div>
+    <div class="hero-content">
+      <div class="hero-copy">
+        <p class="eyebrow">Mercado de capitales · Proyecto académico</p>
+        <h1 id="firmName">Horizonte Capital Asesores de Inversión</h1>
+        <p class="slogan" id="slogan">Invertir con conocimiento, crecer con propósito.</p>
+        <p class="hero-description">Conozca el mercado accionario colombiano, descubra su perfil de inversión y explore escenarios para tomar decisiones más informadas.</p>
+        <div class="hero-actions">
+          <a class="btn" href="#mercado">Explorar acciones <span aria-hidden="true">→</span></a>
+          <a class="text-link" href="#perfil">Conocer mi perfil</a>
+        </div>
+        <p class="disclaimer">Herramienta académica. No constituye asesoría ni recomendación profesional de inversión.</p>
+      </div>
+      <aside class="hero-art" aria-label="Ilustración conceptual de análisis de inversión; no representa datos del mercado">
+        <span class="hero-art-label">Una ruta para aprender</span>
+        <strong class="hero-art-title">Entender antes de invertir</strong>
+        <svg viewBox="0 0 360 190" role="img" aria-label="Gráfico ilustrativo de una tendencia ascendente">
+          <defs>
+            <linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stop-color="#72d394" stop-opacity=".3"></stop>
+              <stop offset="1" stop-color="#72d394" stop-opacity="0"></stop>
+            </linearGradient>
+          </defs>
+          <path d="M22 150H338M22 108H338M22 66H338M22 24H338" stroke="#fff" stroke-opacity=".12" stroke-dasharray="4 7"></path>
+          <path d="M22 155 72 132 115 143 163 91 202 108 250 62 292 75 338 26V178H22Z" fill="url(#chartFill)"></path>
+          <path d="M22 155 72 132 115 143 163 91 202 108 250 62 292 75 338 26" fill="none" stroke="#82dda0" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path>
+          <circle cx="338" cy="26" r="6" fill="#fff"></circle>
+          <text x="22" y="188" fill="#c5d2f3" font-size="10">EDUCACIÓN</text>
+          <text x="146" y="188" fill="#c5d2f3" font-size="10">ANÁLISIS</text>
+          <text x="268" y="188" fill="#c5d2f3" font-size="10">DECISIÓN</text>
+        </svg>
+        <span class="art-note">Ilustración conceptual, no son datos de mercado.</span>
+      </aside>
+    </div>
   </header>
   <main>
-    <section aria-labelledby="teamTitle">
+    <div class="guide-strip" aria-label="Pasos para usar la herramienta">
+      <div class="guide-step"><span class="guide-number">01</span><span><strong>Conozca su perfil</strong><span>Responda cinco preguntas sencillas.</span></span></div>
+      <div class="guide-step"><span class="guide-number">02</span><span><strong>Explore el mercado</strong><span>Consulte cifras, riesgo e históricos.</span></span></div>
+      <div class="guide-step"><span class="guide-number">03</span><span><strong>Simule escenarios</strong><span>Compare alternativas de inversión.</span></span></div>
+    </div>
+    <section id="equipo" class="section-anchor" aria-labelledby="teamTitle">
+      <p class="eyebrow">Conozca a quienes le acompañan</p>
       <h2 id="teamTitle">Su equipo asesor</h2>
       <div id="teamGrid" class="team-grid"></div>
-      <p class="small">Estudiantes de Administración de Negocios Internacionales — UNIPAZ</p>
+      <p class="small">Estudiantes de Administración de Negocios Internacionales — Instituto Universitario de la Paz (UNIPAZ), Barrancabermeja, Colombia.</p>
     </section>
 
-    <section aria-labelledby="profileTitle">
+    <section id="perfil" class="section-anchor" aria-labelledby="profileTitle">
+      <p class="eyebrow">Punto de partida</p>
       <h2 id="profileTitle">Conozcamos su perfil</h2>
+      <p class="section-intro">No hay respuestas correctas o incorrectas. Sus respuestas ayudan a entender cómo se relaciona con el plazo y las variaciones de una inversión.</p>
       <div class="profile-box">
         <div id="profileControls">
           <div class="small" id="questionCounter"></div>
@@ -155,8 +265,10 @@
       </div>
     </section>
 
-    <section aria-labelledby="stocksTitle">
+    <section id="mercado" class="section-anchor" aria-labelledby="stocksTitle">
+      <p class="eyebrow">Datos para observar, no una recomendación</p>
       <h2 id="stocksTitle">Acciones más populares de Colombia</h2>
+      <p class="section-intro">Compare indicadores históricos de emisores colombianos. Seleccione una acción para explorar sus cierres mensuales y observe cómo cambia el riesgo entre alternativas.</p>
       <div id="exampleNotice" class="notice" role="alert" hidden>DATOS DE EJEMPLO — NO SON REALES. Los datos reales aparecen cuando se publique en GitHub.</div>
       <div id="trmDisplay" class="trm" hidden></div>
       <div class="table-wrap">
@@ -175,9 +287,15 @@
       <div id="fitMessage" class="small" aria-live="polite"></div>
     </section>
 
-    <section aria-labelledby="simTitle">
-      <h2 id="simTitle">Simulador de inversión</h2>
-      <p class="small">Elija una acción o una canasta. En una canasta, la inversión se distribuye por partes iguales.</p>
+    <section id="simulador" class="section-anchor" aria-labelledby="simTitle">
+      <div class="simulation-heading">
+        <div>
+          <p class="eyebrow">Planeación con supuestos editables</p>
+          <h2 id="simTitle">Simulador de inversión</h2>
+        </div>
+        <span class="badge">Simulación educativa</span>
+      </div>
+      <p class="section-intro">Explore cuánto podría acumular o cuánto necesitaría ahorrar. Elija una acción o una canasta con pesos iguales; las proyecciones no predicen resultados reales.</p>
       <div id="stockChoices" class="choice-list"></div>
       <div class="form-grid">
         <label class="field">Rentabilidad base (efectiva anual)
@@ -210,16 +328,20 @@
       <button type="button" class="btn secondary" id="restartBtn">Volver a empezar</button>
     </div>
   </main>
-  <footer>Proyecto de aula — Mercado de Capitales — UNIPAZ — <span id="projectDate"></span></footer>
+  <footer>
+    <p class="footer-brand">Horizonte Capital Asesores de Inversión</p>
+    <p>Proyecto de aula — Mercado de Capitales — UNIPAZ — <span id="projectDate"></span></p>
+    <p class="small" style="color:#c5d2f3">Barrancabermeja, Colombia · Aprender, analizar y decidir con responsabilidad.</p>
+  </footer>
 
   <script>
     // CONFIG: edite aquí los datos de identificación, preguntas y supuestos académicos.
     const CONFIG = {
-      firma: "[NOMBRE DE LA FIRMA] Asesores de Inversión",
-      eslogan: "[ESLOGAN]",
+      firma: "Horizonte Capital Asesores de Inversión",
+      eslogan: "Invertir con conocimiento, crecer con propósito.",
       asesores: [
-        { nombre: "[NOMBRE INTEGRANTE 1]", frase: "[frase corta]", foto: "foto1.jpg", iniciales: "I1" },
-        { nombre: "[NOMBRE INTEGRANTE 2]", frase: "[frase corta]", foto: "foto2.jpg", iniciales: "I2" }
+        { nombre: "Darly Natalia Manrique Gonzalez", frase: "Analizo las oportunidades del mercado con enfoque académico.", foto: "WhatsApp Image 2026-11-09 at 3.12.24 PM.jpeg", iniciales: "DMG" },
+        { nombre: "Andrea Ortiz Guzmán", frase: "Promuevo el aprendizaje financiero con visión estratégica.", foto: "WhatsApp Image 2026-11-09 at 3.13.15 PM.jpeg", iniciales: "AOG" }
       ],
       preguntasPerfil: [
         { texto: "¿En cuánto tiempo necesitará el dinero?", opciones: ["Menos de 1 año", "1 a 3 años", "3 a 5 años", "Más de 5 años"] },
@@ -263,6 +385,10 @@
     function renderEquipo() {
       document.getElementById("firmName").textContent = CONFIG.firma;
       document.getElementById("slogan").textContent = CONFIG.eslogan;
+      const shortName = CONFIG.firma.replace(/\s+Asesores de Inversión$/i, "");
+      document.getElementById("brandName").textContent = shortName;
+      document.querySelector(".brand-mark").textContent = shortName.split(/\s+/).slice(0, 2).map(word => word[0]).join("").toUpperCase();
+      document.title = `${shortName} | Asesores de Inversión — UNIPAZ`;
       const grid = document.getElementById("teamGrid");
       grid.replaceChildren();
       CONFIG.asesores.forEach(persona => {
