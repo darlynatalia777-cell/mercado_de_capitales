@@ -218,8 +218,8 @@
       firma: "[NOMBRE DE LA FIRMA] Asesores de Inversión",
       eslogan: "[ESLOGAN]",
       asesores: [
-        { nombre: "[NOMBRE INTEGRANTE 1]", frase: "[frase corta]", foto: "foto1.jpg", iniciales: "I1" },
-        { nombre: "[NOMBRE INTEGRANTE 2]", frase: "[frase corta]", foto: "foto2.jpg", iniciales: "I2" }
+        { nombre: "[NOMBRE INTEGRANTE 1]", frase: "[frase corta]", foto: "WhatsApp%20Image%202026-11-09%20at%203.12.24%20PM.jpeg", iniciales: "I1" },
+        { nombre: "[NOMBRE INTEGRANTE 2]", frase: "[frase corta]", foto: "WhatsApp%20Image%202026-11-09%20at%203.13.15%20PM.jpeg", iniciales: "I2" }
       ],
       preguntasPerfil: [
         { texto: "¿En cuánto tiempo necesitará el dinero?", opciones: ["Menos de 1 año", "1 a 3 años", "3 a 5 años", "Más de 5 años"] },
@@ -228,12 +228,11 @@
         { texto: "¿Tiene ahorros para emergencias de 3 a 6 meses?", opciones: ["No", "Menos de 3 meses", "Sí, 3 a 6 meses", "Sí, más de 6 meses"] },
         { texto: "¿Qué busca?", opciones: ["Proteger mi dinero", "Un poco más que un CDT", "Crecer", "Crecer al máximo"] }
       ],
-      tasaCDT: 0.10, // Tasa efectiva anual editable; valor ilustrativo de 10 %.
-      inflacion: 0.05, // Inflación anual editable; valor ilustrativo de 5 %.
+      tasaCDT: 0.10,
+      inflacion: 0.05,
       fechaProyecto: ""
     };
 
-    // Formatos colombianos para pesos y porcentajes.
     const formatoPesos = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 });
     const formatoNumero = new Intl.NumberFormat("es-CO", { maximumFractionDigits: 2 });
     const formatoPct = new Intl.NumberFormat("es-CO", { minimumFractionDigits: 1, maximumFractionDigits: 2 });
@@ -252,14 +251,12 @@
     let graficoSimulacion = null;
     let ultimaSimulacion = null;
 
-    // Datos ficticios para que el simulador pueda usarse antes de publicar datos.json.
     const ejemplos = [
       { ticker: "EJEMPLO-A", nombre: "Acción Ejemplo A", nemotecnico: "EJEMPLO A", sector: "Sector ficticio", moneda: "COP", precio: 10000, fecha: "", variacion_dia_pct: 0.8, rent_1a_pct: 8, rent_anual_3a_pct: 7, volatilidad_anual_pct: 12, caida_maxima_1a_pct: -10, dividendo_rend_pct: 2, historico: [] },
       { ticker: "EJEMPLO-B", nombre: "Acción Ejemplo B", nemotecnico: "EJEMPLO B", sector: "Sector ficticio", moneda: "COP", precio: 25000, fecha: "", variacion_dia_pct: -0.5, rent_1a_pct: 13, rent_anual_3a_pct: 11, volatilidad_anual_pct: 25, caida_maxima_1a_pct: -18, dividendo_rend_pct: 1.5, historico: [] },
       { ticker: "EJEMPLO-C", nombre: "Acción Ejemplo C", nemotecnico: "EJEMPLO C", sector: "Sector ficticio", moneda: "COP", precio: 5000, fecha: "", variacion_dia_pct: 1.2, rent_1a_pct: 22, rent_anual_3a_pct: 16, volatilidad_anual_pct: 42, caida_maxima_1a_pct: -32, dividendo_rend_pct: 0, historico: [] }
     ];
 
-    // Presentación del equipo y fallback de fotos sin dependencias externas.
     function renderEquipo() {
       document.getElementById("firmName").textContent = CONFIG.firma;
       document.getElementById("slogan").textContent = CONFIG.eslogan;
@@ -291,7 +288,6 @@
       });
     }
 
-    // Encuesta secuencial de perfil: cada respuesta aporta de uno a cuatro puntos.
     function mostrarPregunta() {
       const area = document.getElementById("questionArea");
       const question = CONFIG.preguntasPerfil[preguntaActual];
@@ -324,6 +320,7 @@
       document.getElementById("nextQuestion").textContent = preguntaActual === CONFIG.preguntasPerfil.length - 1 ? "Ver mi perfil" : "Siguiente";
       document.getElementById("nextQuestion").disabled = respuestasPerfil[preguntaActual] === null;
     }
+
     function mostrarPerfil() {
       const score = respuestasPerfil.reduce((sum, value) => sum + value, 0);
       perfilActual = score <= 9 ? "Conservador" : score <= 15 ? "Moderado" : "Arriesgado";
@@ -368,7 +365,6 @@
       document.getElementById("calculateBtn").click();
     }
 
-    // Carga del JSON publicado. Si no está disponible, se identifica claramente la información ficticia.
     async function cargarDatos() {
       try {
         const response = await fetch("datos.json", { cache: "no-store" });
@@ -393,7 +389,6 @@
       renderInputs();
     }
 
-    // Tabla, clasificación de riesgo y etiqueta de coherencia con el perfil.
     function nivelRiesgo(volatilidad) {
       if (volatilidad < 20) return "Bajo";
       if (volatilidad <= 35) return "Medio";
@@ -453,7 +448,6 @@
         : "";
     }
 
-    // Gráfico mensual de cierres disponible para la acción seleccionada.
     function mostrarHistorico(index) {
       const stock = acciones[index];
       const points = Array.isArray(stock.historico) ? stock.historico : [];
@@ -471,7 +465,6 @@
       });
     }
 
-    // Selección de una acción o una canasta con ponderación igualitaria.
     function renderChoices() {
       const container = document.getElementById("stockChoices");
       container.replaceChildren();
@@ -512,7 +505,6 @@
       if (ultimaSimulacion) calcularSimulacion();
     }
 
-    // Campos que cambian según el modo de cálculo elegido.
     const campos = {
       future: [
         { id: "initial", label: "Capital inicial", type: "number", value: 1000000, min: 0, step: 10000 },
@@ -535,6 +527,7 @@
         { id: "years", label: "Años", type: "number", value: 5, min: .1, step: .1 }
       ]
     };
+
     function renderInputs() {
       const container = document.getElementById("simInputs");
       container.replaceChildren();
@@ -554,6 +547,7 @@
         container.append(label);
       });
     }
+
     document.querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", () => {
       modoActual = tab.dataset.mode;
       document.querySelectorAll(".tab").forEach(item => item.setAttribute("aria-selected", String(item === tab)));
@@ -569,7 +563,6 @@
     });
     document.getElementById("customReturn").addEventListener("input", actualizarFuenteRentabilidad);
 
-    // Funciones financieras con aportes al final de cada mes.
     function factorAportes(i, months) {
       if (Math.abs(i) < 1e-12) return months;
       return ((1 + i) ** months - 1) / i;
@@ -615,7 +608,7 @@
       const numerator = goal - initial * (1 + r) ** years;
       const denominator = factorAportes(i, months);
       const requiredContribution = denominator > 0 ? numerator / denominator : NaN;
-      return { amount: goal, years, monthly: Math.max(0, requiredContribution), initial, error: !Number.isFinite(requiredContribution) ? "No es posible calcular el aporte con estos datos." : null, enough: requiredContribution < 0 };
+      return { amount: goal, years, monthly: Math.max(0, requiredContribution), initial, error: !Number.isFinite(requiredContribution) ? "No es posible calcular el aporte con estos datos." : null, enough: requiredContribution <= 0 };
     }
     function leerParametros() {
       const read = id => Number(document.getElementById(id)?.value);
@@ -648,7 +641,6 @@
       return initial + monthly * Math.round(years * 12);
     }
 
-    // Cálculo de escenarios, CDT, rentabilidad real, títulos enteros y gráfico anual.
     function calcularSimulacion() {
       const message = document.getElementById("simMessage");
       const results = document.getElementById("simResults");
@@ -657,8 +649,7 @@
       try {
         const base = datosBase();
         if (!base.stocks.length) throw new Error("Seleccione al menos una acción.");
-        if (document.getElementById("returnSource").value === "custom" &&
-            (!document.getElementById("customReturn").value.trim() || !Number.isFinite(Number(document.getElementById("customReturn").value)))) {
+        if (document.getElementById("returnSource").value === "custom" && (!document.getElementById("customReturn").value.trim() || !Number.isFinite(Number(document.getElementById("customReturn").value)))) {
           throw new Error("Ingrese una rentabilidad personalizada válida.");
         }
         const params = leerParametros();
@@ -741,7 +732,7 @@
         display.append(metricGrid);
         const explanation = document.createElement("p");
         explanation.className = "small";
-        explanation.textContent = "Los escenarios representan un rango aproximado y no una garantía. El CDT y la inflación son supuestos editables en CONFIG; la comparación no incorpora impuestos, costos ni cambios de tasa.";
+        explanation.textContent = "Los escenarios representan un rango aproximado y no una garantía. El CDT y la inflación son supuestos editables en CONFIG; la comparación no incorpora impuestos, comisiones ni cambios de mercado.";
         display.append(explanation);
         results.append(display);
         ultimaSimulacion = { base, params, rates };
@@ -755,6 +746,7 @@
         if (graficoSimulacion) { graficoSimulacion.destroy(); graficoSimulacion = null; }
       }
     }
+
     function renderGraficoSimulacion(simulation) {
       const { params, rates } = simulation;
       const years = modoActual === "time" ? (proyectar(simulation.base.r, params).years || 1) : params.years;
@@ -780,7 +772,6 @@
       });
     }
 
-    // Botones, reinicio y fecha del proyecto.
     document.getElementById("calculateBtn").addEventListener("click", calcularSimulacion);
     document.getElementById("prevQuestion").addEventListener("click", () => { if (preguntaActual > 0) { preguntaActual--; mostrarPregunta(); } });
     document.getElementById("nextQuestion").addEventListener("click", () => {
