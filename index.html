@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="es-CO">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Herramienta académica de Mercado de Capitales para conocer acciones colombianas y simular inversiones.">
+  <title>Asesores de Inversión | UNIPAZ</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --marino: #16234F;
+      --verde: #2E9E5B;
+      --azul-claro: #D7E3FA;
+      --fondo: #fff;
+      --texto: #20283a;
+      --gris: #667085;
+      --borde: #dce2eb;
+      --rojo: #c62828;
+      --amarillo: #fff4cc;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--texto); background: #f6f8fc; font-family: Calibri, Arial, sans-serif; line-height: 1.5; }
+    h1, h2, h3 { color: var(--marino); font-family: Georgia, "Times New Roman", serif; line-height: 1.2; }
+    h1 { margin: 0 0 .45rem; font-size: clamp(2rem, 5vw, 3rem); }
+    h2 { margin: 0 0 1rem; font-size: clamp(1.45rem, 3vw, 2rem); }
+    h3 { margin: 0 0 .5rem; }
+    p { margin: .4rem 0; }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .hero { color: white; background: var(--marino); padding: 2.5rem max(1rem, calc((100% - 1120px) / 2)); }
+    .hero h1, .hero h2 { color: white; }
+    .hero .slogan { color: #dce6ff; font-size: 1.2rem; }
+    .disclaimer { max-width: 850px; margin-top: 1.25rem; padding: .75rem 1rem; border-left: 4px solid var(--verde); background: rgba(255,255,255,.1); }
+    main { width: min(1120px, calc(100% - 2rem)); margin: 1.5rem auto; }
+    section { margin: 1.25rem 0; padding: clamp(1rem, 3vw, 1.6rem); border: 1px solid var(--borde); border-radius: 16px; background: var(--fondo); box-shadow: 0 5px 18px rgba(22,35,79,.05); }
+    .team-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+    .advisor { display: flex; align-items: center; gap: 1rem; padding: 1rem; border-radius: 12px; background: #f5f7fc; }
+    .advisor img, .avatar { width: 76px; height: 76px; flex: 0 0 76px; border-radius: 50%; object-fit: cover; }
+    .avatar { display: grid; place-items: center; color: white; background: var(--marino); font-size: 1.25rem; font-weight: 700; }
+    .advisor p { margin: .15rem 0; }
+    .muted, .small { color: var(--gris); }
+    .small { font-size: .9rem; }
+    .profile-box { max-width: 760px; margin: auto; }
+    .progress-track { height: 10px; margin: .5rem 0 1.5rem; overflow: hidden; border-radius: 10px; background: #e8edf5; }
+    .progress-fill { width: 0; height: 100%; background: var(--verde); transition: width .25s ease; }
+    .question-options { display: grid; gap: .6rem; }
+    .option { display: flex; align-items: center; gap: .7rem; padding: .8rem 1rem; border: 1px solid var(--borde); border-radius: 10px; cursor: pointer; }
+    .option:has(input:checked) { border-color: var(--verde); background: #eef9f1; }
+    .option input { accent-color: var(--verde); }
+    .button-row { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: 1rem; }
+    .btn { padding: .7rem 1rem; border: 0; border-radius: 8px; color: white; background: var(--marino); font-weight: 700; }
+    .btn:hover { filter: brightness(1.12); }
+    .btn.secondary { color: var(--marino); border: 1px solid var(--marino); background: white; }
+    .btn.green { background: var(--verde); }
+    .btn:disabled { cursor: not-allowed; opacity: .5; }
+    .profile-result { margin-top: 1rem; padding: 1rem; border-radius: 10px; background: var(--azul-claro); }
+    .notice { margin: 0 0 1rem; padding: .9rem 1rem; border: 1px solid #e6c55c; border-radius: 8px; background: var(--amarillo); color: #493b10; font-weight: 700; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: .65rem .55rem; border-bottom: 1px solid var(--borde); text-align: left; vertical-align: middle; }
+    th { color: var(--marino); background: #f1f4fa; font-size: .9rem; white-space: nowrap; }
+    tbody tr.stock-row { cursor: pointer; }
+    tbody tr.stock-row:hover { background: #f4f8ff; }
+    .positive { color: #187a3d; font-weight: 700; }
+    .negative { color: var(--rojo); font-weight: 700; }
+    .badge { display: inline-block; padding: .18rem .5rem; border-radius: 20px; color: var(--marino); background: var(--azul-claro); font-size: .78rem; font-weight: 700; white-space: nowrap; }
+    .badge.fit { color: #126337; background: #dff4e6; }
+    .risk-low { color: #126337; } .risk-medium { color: #8a5a00; } .risk-high { color: #a51f1f; }
+    .data-meta { margin-top: .65rem; }
+    .chart-box { position: relative; min-height: 260px; margin-top: 1rem; }
+    .trm { margin: .75rem 0; padding: .75rem; border-radius: 8px; background: #f1f4fa; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+    .field { display: flex; flex-direction: column; gap: .3rem; }
+    .field input, .field select { width: 100%; min-height: 42px; padding: .55rem .65rem; border: 1px solid #b8c2d2; border-radius: 7px; color: var(--texto); background: white; }
+    .field input:focus, .field select:focus, button:focus-visible { outline: 3px solid #8eace8; outline-offset: 2px; }
+    .choice-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: .45rem; margin: .5rem 0 1rem; }
+    .choice { display: flex; gap: .5rem; align-items: center; padding: .55rem; border-radius: 7px; background: #f5f7fc; }
+    .choice input { accent-color: var(--verde); }
+    .tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .4rem; margin: 1rem 0; }
+    .tab { min-height: 46px; padding: .55rem; border: 1px solid var(--borde); border-radius: 8px; color: var(--marino); background: white; font-weight: 700; }
+    .tab[aria-selected="true"] { color: white; border-color: var(--marino); background: var(--marino); }
+    .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: .7rem; margin-top: 1rem; }
+    .metric { padding: .8rem; border-radius: 9px; background: #f1f4fa; }
+    .metric strong { display: block; color: var(--marino); font-size: 1.1rem; }
+    .scenario-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .7rem; margin-top: 1rem; }
+    .scenario { padding: .85rem; border: 1px solid var(--borde); border-radius: 9px; }
+    .scenario h3 { font-family: Calibri, Arial, sans-serif; font-size: 1rem; }
+    .error-text { color: var(--rojo); font-weight: 700; }
+    footer { padding: 1.5rem 1rem; color: white; background: var(--marino); text-align: center; }
+    @media (max-width: 700px) {
+      main { width: min(100% - 1rem, 1120px); margin: .5rem auto; }
+      .hero { padding: 1.8rem 1rem; }
+      section { margin: .65rem 0; padding: 1rem; border-radius: 12px; }
+      .team-grid, .form-grid { grid-template-columns: 1fr; }
+      .advisor { align-items: flex-start; }
+      .tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .scenario-grid { grid-template-columns: 1fr; }
+      .table-wrap { overflow: visible; }
+      table, thead, tbody, tr, th, td { display: block; }
+      thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+      tbody { display: grid; gap: .75rem; }
+      tbody tr.stock-row { padding: .55rem .75rem; border: 1px solid var(--borde); border-radius: 10px; background: white; }
+      tbody td { display: flex; justify-content: space-between; gap: .8rem; padding: .45rem 0; border-bottom: 1px solid #edf0f5; text-align: right; }
+      tbody td:last-child { border-bottom: 0; }
+      tbody td::before { content: attr(data-label); color: var(--gris); font-weight: 700; text-align: left; }
+    }
+    @media print {
+      body { color: #111; background: white; font-size: 10pt; }
+      .hero { padding: 1rem; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      main { width: 100%; margin: 0; }
+      section { margin: .5rem 0; padding: .7rem; box-shadow: none; break-inside: avoid; }
+      .button-row, .tabs, #profileControls, .choice-list, #calculateBtn { display: none !important; }
+      .table-wrap { overflow: visible; }
+      table { display: table; font-size: 7.5pt; }
+      thead { display: table-header-group; position: static; width: auto; height: auto; clip: auto; }
+      tbody { display: table-row-group; }
+      tr { display: table-row; }
+      th, td { display: table-cell; padding: .25rem; }
+      td::before { content: none !important; }
+      .advisor { break-inside: avoid; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .advisor img, .avatar { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .chart-box { min-height: 210px; }
+      footer { color: #111; background: white; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <h1 id="firmName">[NOMBRE DE LA FIRMA] Asesores de Inversión</h1>
+    <p class="slogan" id="slogan">[ESLOGAN]</p>
+    <p class="disclaimer">Herramienta académica. No constituye asesoría ni recomendación profesional de inversión.</p>
+  </header>
+  <main>
+    <section aria-labelledby="teamTitle">
+      <h2 id="teamTitle">Su equipo asesor</h2>
+      <div id="teamGrid" class="team-grid"></div>
+      <p class="small">Estudiantes de Administración de Negocios Internacionales — UNIPAZ</p>
+    </section>
+
+    <section aria-labelledby="profileTitle">
+      <h2 id="profileTitle">Conozcamos su perfil</h2>
+      <div class="profile-box">
+        <div id="profileControls">
+          <div class="small" id="questionCounter"></div>
+          <div class="progress-track" role="progressbar" aria-label="Progreso del perfil" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <div id="questionArea"></div>
+          <div class="button-row">
+            <button type="button" class="btn secondary" id="prevQuestion">Anterior</button>
+            <button type="button" class="btn" id="nextQuestion">Siguiente</button>
+          </div>
+        </div>
+        <div id="profileResult" class="profile-result" hidden aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section aria-labelledby="stocksTitle">
+      <h2 id="stocksTitle">Acciones más populares de Colombia</h2>
+      <div id="exampleNotice" class="notice" role="alert" hidden>DATOS DE EJEMPLO — NO SON REALES. Los datos reales aparecen cuando se publique en GitHub.</div>
+      <div id="trmDisplay" class="trm" hidden></div>
+      <div class="table-wrap">
+        <table aria-label="Acciones colombianas">
+          <thead><tr>
+            <th>Nombre</th><th>Nemotécnico</th><th>Sector</th><th>Precio actual</th><th>Variación del día</th>
+            <th>Rentabilidad 1 año</th><th>Rentabilidad anual promedio 3 años</th><th>Volatilidad anual</th>
+            <th>Caída máxima en 1 año</th><th>Rendimiento por dividendo</th><th>Nivel de riesgo</th>
+          </tr></thead>
+          <tbody id="stockRows"></tbody>
+        </table>
+      </div>
+      <p class="small data-meta" id="dataMeta"></p>
+      <div class="chart-box"><canvas id="historyChart" aria-label="Gráfico mensual de precios de la acción seleccionada"></canvas></div>
+      <p id="historyCaption" class="small">Seleccione o toque una acción para ver su histórico mensual de los últimos 3 años.</p>
+      <div id="fitMessage" class="small" aria-live="polite"></div>
+    </section>
+
+    <section aria-labelledby="simTitle">
+      <h2 id="simTitle">Simulador de inversión</h2>
+      <p class="small">Elija una acción o una canasta. En una canasta, la inversión se distribuye por partes iguales.</p>
+      <div id="stockChoices" class="choice-list"></div>
+      <div class="form-grid">
+        <label class="field">Rentabilidad base (efectiva anual)
+          <select id="returnSource">
+            <option value="three">Promedio anual 3 años</option>
+            <option value="one">Último año</option>
+            <option value="custom">Personalizada</option>
+          </select>
+        </label>
+        <label class="field" id="customReturnField" hidden>Rentabilidad personalizada (% anual)
+          <input id="customReturn" type="number" step="0.1" value="10" inputmode="decimal">
+        </label>
+      </div>
+      <div class="tabs" role="tablist" aria-label="Modo del simulador">
+        <button class="tab" type="button" role="tab" aria-selected="true" data-mode="future">¿Cuánto tendré?</button>
+        <button class="tab" type="button" role="tab" aria-selected="false" data-mode="capital">¿Cuánto debo invertir hoy?</button>
+        <button class="tab" type="button" role="tab" aria-selected="false" data-mode="time">¿En cuánto tiempo llego?</button>
+        <button class="tab" type="button" role="tab" aria-selected="false" data-mode="monthly">¿Cuánto debo ahorrar al mes?</button>
+      </div>
+      <div id="simInputs" class="form-grid"></div>
+      <div class="button-row"><button type="button" class="btn green" id="calculateBtn">Calcular simulación</button></div>
+      <div id="simMessage" aria-live="polite"></div>
+      <div id="simResults"></div>
+      <div class="chart-box"><canvas id="simulationChart" aria-label="Proyección anual de escenarios"></canvas></div>
+      <p><strong>Rentabilidades pasadas no garantizan rentabilidades futuras.</strong></p>
+    </section>
+
+    <div class="button-row">
+      <button type="button" class="btn" id="printBtn">Imprimir o guardar en PDF</button>
+      <button type="button" class="btn secondary" id="restartBtn">Volver a empezar</button>
+    </div>
+  </main>
+  <footer>Proyecto de aula — Mercado de Capitales — UNIPAZ — <span id="projectDate"></span></footer>
+
+  <script>
+    // CONFIG: edite aquí los datos de identificación, preguntas y supuestos académicos.
+    const CONFIG = {
+      firma: "[NOMBRE DE LA FIRMA] Asesores de Inversión",
+      eslogan: "[ESLOGAN]",
+      asesores: [
+        { nombre: "[NOMBRE INTEGRANTE 1]", frase: "[frase corta]", foto: "foto1.jpg", iniciales: "I1" },
+        { nombre: "[NOMBRE INTEGRANTE 2]", frase: "[frase corta]", foto: "foto2.jpg", iniciales: "I2" }
+      ],
+      preguntasPerfil: [
+        { texto: "¿En cuánto tiempo necesitará el dinero?", opciones: ["Menos de 1 año", "1 a 3 años", "3 a 5 años", "Más de 5 años"] },
+        { texto: "Si su inversión cae 20 % en un mes, ¿qué hace?", opciones: ["Retiro todo", "Retiro una parte", "Espero", "Invierto más"] },
+        { texto: "¿Qué ha invertido antes?", opciones: ["Nada", "CDT o ahorro", "Fondos de inversión", "Acciones"] },
+        { texto: "¿Tiene ahorros para emergencias de 3 a 6 meses?", opciones: ["No", "Menos de 3 meses", "Sí, 3 a 6 meses", "Sí, más de 6 meses"] },
+        { texto: "¿Qué busca?", opciones: ["Proteger mi dinero", "Un poco más que un CDT", "Crecer", "Crecer al máximo"] }
+      ],
+      tasaCDT: 0.10, // Tasa efectiva anual editable; valor ilustrativo de 10 %.
+      inflacion: 0.05, // Inflación anual editable; valor ilustrativo de 5 %.
+      fechaProyecto: ""
+    };
+
+    // Formatos colombianos para pesos y porcentajes.
+    const formatoPesos = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 });
+    const formatoNumero = new Intl.NumberFormat("es-CO", { maximumFractionDigits: 2 });
+    const formatoPct = new Intl.NumberFormat("es-CO", { minimumFractionDigits: 1, maximumFractionDigits: 2 });
+    const dinero = valor => formatoPesos.format(Number.isFinite(valor) ? valor : 0).replace(/\u00a0/g, " ");
+    const porcentaje = valor => `${formatoPct.format(valor)} %`;
+    const fechaHoy = () => new Date().toLocaleDateString("es-CO", { year: "numeric", month: "long", day: "numeric" });
+    const tasas = { three: "rent_anual_3a_pct", one: "rent_1a_pct" };
+    let acciones = [];
+    let fuenteDatos = "Datos de ejemplo";
+    let fechaDatos = fechaHoy();
+    let perfilActual = null;
+    let preguntaActual = 0;
+    let respuestasPerfil = Array(CONFIG.preguntasPerfil.length).fill(null);
+    let modoActual = "future";
+    let graficoHistorico = null;
+    let graficoSimulacion = null;
+    let ultimaSimulacion = null;
+
+    // Datos ficticios para que el simulador pueda usarse antes de publicar datos.json.
+    const ejemplos = [
+      { ticker: "EJEMPLO-A", nombre: "Acción Ejemplo A", nemotecnico: "EJEMPLO A", sector: "Sector ficticio", moneda: "COP", precio: 10000, fecha: "", variacion_dia_pct: 0.8, rent_1a_pct: 8, rent_anual_3a_pct: 7, volatilidad_anual_pct: 12, caida_maxima_1a_pct: -10, dividendo_rend_pct: 2, historico: [] },
+      { ticker: "EJEMPLO-B", nombre: "Acción Ejemplo B", nemotecnico: "EJEMPLO B", sector: "Sector ficticio", moneda: "COP", precio: 25000, fecha: "", variacion_dia_pct: -0.5, rent_1a_pct: 13, rent_anual_3a_pct: 11, volatilidad_anual_pct: 25, caida_maxima_1a_pct: -18, dividendo_rend_pct: 1.5, historico: [] },
+      { ticker: "EJEMPLO-C", nombre: "Acción Ejemplo C", nemotecnico: "EJEMPLO C", sector: "Sector ficticio", moneda: "COP", precio: 5000, fecha: "", variacion_dia_pct: 1.2, rent_1a_pct: 22, rent_anual_3a_pct: 16, volatilidad_anual_pct: 42, caida_maxima_1a_pct: -32, dividendo_rend_pct: 0, historico: [] }
+    ];
+
+    // Presentación del equipo y fallback de fotos sin dependencias externas.
+    function renderEquipo() {
+      document.getElementById("firmName").textContent = CONFIG.firma;
+      document.getElementById("slogan").textContent = CONFIG.eslogan;
+      const grid = document.getElementById("teamGrid");
+      grid.replaceChildren();
+      CONFIG.asesores.forEach(persona => {
+        const card = document.createElement("article");
+        card.className = "advisor";
+        const img = document.createElement("img");
+        img.src = persona.foto;
+        img.alt = `Foto de ${persona.nombre}`;
+        img.addEventListener("error", () => {
+          const avatar = document.createElement("div");
+          avatar.className = "avatar";
+          avatar.setAttribute("aria-label", `Iniciales de ${persona.nombre}`);
+          avatar.textContent = persona.iniciales;
+          img.replaceWith(avatar);
+        }, { once: true });
+        const detail = document.createElement("div");
+        const name = document.createElement("h3");
+        name.textContent = persona.nombre;
+        const role = document.createElement("p");
+        role.textContent = "Asesor(a) financiero(a)";
+        const intro = document.createElement("p");
+        intro.textContent = persona.frase;
+        detail.append(name, role, intro);
+        card.append(img, detail);
+        grid.append(card);
+      });
+    }
+
+    // Encuesta secuencial de perfil: cada respuesta aporta de uno a cuatro puntos.
+    function mostrarPregunta() {
+      const area = document.getElementById("questionArea");
+      const question = CONFIG.preguntasPerfil[preguntaActual];
+      document.getElementById("questionCounter").textContent = `Pregunta ${preguntaActual + 1} de ${CONFIG.preguntasPerfil.length}`;
+      const progress = ((preguntaActual + (respuestasPerfil[preguntaActual] !== null ? 1 : 0)) / CONFIG.preguntasPerfil.length) * 100;
+      document.getElementById("progressFill").style.width = `${progress}%`;
+      document.querySelector(".progress-track").setAttribute("aria-valuenow", String(preguntaActual + (respuestasPerfil[preguntaActual] !== null ? 1 : 0)));
+      const title = document.createElement("h3");
+      title.textContent = question.texto;
+      const options = document.createElement("div");
+      options.className = "question-options";
+      question.opciones.forEach((opcion, index) => {
+        const label = document.createElement("label");
+        label.className = "option";
+        const input = document.createElement("input");
+        input.type = "radio";
+        input.name = "profileAnswer";
+        input.value = String(index + 1);
+        input.checked = respuestasPerfil[preguntaActual] === index + 1;
+        input.addEventListener("change", () => {
+          respuestasPerfil[preguntaActual] = index + 1;
+          document.getElementById("nextQuestion").disabled = false;
+          document.getElementById("progressFill").style.width = `${((preguntaActual + 1) / CONFIG.preguntasPerfil.length) * 100}%`;
+        });
+        label.append(input, document.createTextNode(opcion));
+        options.append(label);
+      });
+      area.replaceChildren(title, options);
+      document.getElementById("prevQuestion").disabled = preguntaActual === 0;
+      document.getElementById("nextQuestion").textContent = preguntaActual === CONFIG.preguntasPerfil.length - 1 ? "Ver mi perfil" : "Siguiente";
+      document.getElementById("nextQuestion").disabled = respuestasPerfil[preguntaActual] === null;
+    }
+    function mostrarPerfil() {
+      const score = respuestasPerfil.reduce((sum, value) => sum + value, 0);
+      perfilActual = score <= 9 ? "Conservador" : score <= 15 ? "Moderado" : "Arriesgado";
+      const explanations = {
+        Conservador: [
+          "Prefiere estabilidad y busca cuidar su dinero.",
+          "Puede sentirse incómodo ante cambios fuertes en el valor.",
+          "Un plazo corto suele hacer más importante limitar las fluctuaciones."
+        ],
+        Moderado: [
+          "Busca equilibrio entre crecimiento y estabilidad.",
+          "Puede aceptar algunas variaciones en el valor de su inversión.",
+          "Diversificar y pensar en el plazo ayuda a manejar el riesgo."
+        ],
+        Arriesgado: [
+          "Está dispuesto a tolerar fluctuaciones importantes.",
+          "Busca crecimiento y comprende que puede haber pérdidas.",
+          "Un horizonte largo puede ayudar a atravesar periodos difíciles."
+        ]
+      };
+      const result = document.getElementById("profileResult");
+      result.replaceChildren();
+      const heading = document.createElement("h3");
+      heading.textContent = `Su perfil es ${perfilActual}`;
+      const explanation = document.createElement("div");
+      explanations[perfilActual].forEach(line => {
+        const text = document.createElement("p");
+        text.textContent = line;
+        explanation.append(text);
+      });
+      const context = document.createElement("p");
+      context.textContent = "Este resultado es orientativo y no reemplaza una evaluación financiera profesional.";
+      result.append(heading, explanation, context);
+      if (perfilActual === "Conservador") {
+        const note = document.createElement("p");
+        note.textContent = "Para su perfil, las acciones deberían ser una parte pequeña de su dinero; considere primero CDT, TES o fondos de renta fija.";
+        result.append(note);
+      }
+      result.hidden = false;
+      document.getElementById("profileControls").hidden = true;
+      renderAcciones();
+      document.getElementById("calculateBtn").click();
+    }
+
+    // Carga del JSON publicado. Si no está disponible, se identifica claramente la información ficticia.
+    async function cargarDatos() {
+      try {
+        const response = await fetch("datos.json", { cache: "no-store" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        if (!Array.isArray(data.acciones) || data.acciones.length === 0) throw new Error("El archivo no contiene acciones");
+        acciones = data.acciones;
+        fuenteDatos = data.fuente || "Fuente no especificada";
+        fechaDatos = data.actualizado ? new Date(data.actualizado).toLocaleString("es-CO") : "no disponible";
+        if (data.trm && Number.isFinite(Number(data.trm.valor))) {
+          document.getElementById("trmDisplay").textContent = `TRM de referencia: ${dinero(data.trm.valor)} por USD · Fecha: ${data.trm.fecha || "no disponible"}`;
+          document.getElementById("trmDisplay").hidden = false;
+        }
+      } catch (error) {
+        acciones = ejemplos;
+        fuenteDatos = "Datos de ejemplo";
+        fechaDatos = fechaHoy();
+        document.getElementById("exampleNotice").hidden = false;
+      }
+      renderAcciones();
+      renderChoices();
+      renderInputs();
+    }
+
+    // Tabla, clasificación de riesgo y etiqueta de coherencia con el perfil.
+    function nivelRiesgo(volatilidad) {
+      if (volatilidad < 20) return "Bajo";
+      if (volatilidad <= 35) return "Medio";
+      return "Alto";
+    }
+    function riesgoAcorde(risk) {
+      if (!perfilActual) return false;
+      return perfilActual === "Arriesgado" || (perfilActual === "Moderado" && risk !== "Alto") || (perfilActual === "Conservador" && risk === "Bajo");
+    }
+    function renderAcciones() {
+      const body = document.getElementById("stockRows");
+      body.replaceChildren();
+      acciones.forEach((stock, index) => {
+        const row = document.createElement("tr");
+        row.className = "stock-row";
+        row.tabIndex = 0;
+        row.setAttribute("aria-label", `Ver gráfico de ${stock.nombre}`);
+        const risk = nivelRiesgo(Number(stock.volatilidad_anual_pct) || 0);
+        const values = [
+          stock.nombre, stock.nemotecnico, stock.sector, dinero(stock.precio),
+          porcentaje(Number(stock.variacion_dia_pct) || 0), porcentaje(Number(stock.rent_1a_pct) || 0),
+          porcentaje(Number(stock.rent_anual_3a_pct) || 0), porcentaje(Number(stock.volatilidad_anual_pct) || 0),
+          porcentaje(Number(stock.caida_maxima_1a_pct) || 0), porcentaje(Number(stock.dividendo_rend_pct) || 0)
+        ];
+        const labels = ["Nombre", "Nemotécnico", "Sector", "Precio actual", "Variación del día", "Rentabilidad 1 año", "Rentabilidad anual promedio 3 años", "Volatilidad anual", "Caída máxima en 1 año", "Rendimiento por dividendo"];
+        values.forEach((value, cellIndex) => {
+          const cell = document.createElement("td");
+          cell.dataset.label = labels[cellIndex];
+          cell.textContent = value;
+          if (cellIndex === 4) cell.className = Number(stock.variacion_dia_pct) >= 0 ? "positive" : "negative";
+          row.append(cell);
+        });
+        const riskCell = document.createElement("td");
+        riskCell.dataset.label = "Nivel de riesgo";
+        const riskBadge = document.createElement("span");
+        riskBadge.className = `badge risk-${risk.toLowerCase()}`;
+        riskBadge.textContent = risk;
+        riskCell.append(riskBadge);
+        if (riesgoAcorde(risk)) {
+          const fit = document.createElement("span");
+          fit.className = "badge fit";
+          fit.textContent = "Acorde a su perfil";
+          fit.style.marginLeft = ".3rem";
+          riskCell.append(fit);
+        }
+        row.append(riskCell);
+        row.addEventListener("click", () => mostrarHistorico(index));
+        row.addEventListener("keydown", event => {
+          if (event.key === "Enter" || event.key === " ") { event.preventDefault(); mostrarHistorico(index); }
+        });
+        body.append(row);
+      });
+      document.getElementById("dataMeta").textContent = `Fuente: ${fuenteDatos} · Datos al ${fechaDatos}`;
+      const compatible = acciones.some(stock => riesgoAcorde(nivelRiesgo(Number(stock.volatilidad_anual_pct) || 0)));
+      document.getElementById("fitMessage").textContent = perfilActual && perfilActual !== "Arriesgado" && !compatible
+        ? "Ninguna de estas acciones tiene riesgo bajo; para su perfil conviene priorizar instrumentos de renta fija."
+        : "";
+    }
+
+    // Gráfico mensual de cierres disponible para la acción seleccionada.
+    function mostrarHistorico(index) {
+      const stock = acciones[index];
+      const points = Array.isArray(stock.historico) ? stock.historico : [];
+      document.getElementById("historyCaption").textContent = points.length
+        ? `Histórico mensual de ${stock.nombre} · Cierres en ${stock.moneda || "COP"}.`
+        : `No hay histórico mensual disponible para ${stock.nombre}.`;
+      if (graficoHistorico) graficoHistorico.destroy();
+      graficoHistorico = new Chart(document.getElementById("historyChart"), {
+        type: "line",
+        data: {
+          labels: points.map(point => point.mes),
+          datasets: [{ label: `${stock.nombre} — cierre`, data: points.map(point => point.cierre), borderColor: "#16234F", backgroundColor: "rgba(215,227,250,.35)", fill: true, pointRadius: 1.5, tension: .2 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true } }, scales: { y: { ticks: { callback: value => formatoNumero.format(value) } } } }
+      });
+    }
+
+    // Selección de una acción o una canasta con ponderación igualitaria.
+    function renderChoices() {
+      const container = document.getElementById("stockChoices");
+      container.replaceChildren();
+      acciones.forEach((stock, index) => {
+        const label = document.createElement("label");
+        label.className = "choice";
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.name = "selectedStock";
+        input.value = String(index);
+        input.checked = index === 0;
+        input.addEventListener("change", () => {
+          const checked = [...document.querySelectorAll('input[name="selectedStock"]:checked')];
+          if (!checked.length) input.checked = true;
+          actualizarFuenteRentabilidad();
+        });
+        label.append(input, document.createTextNode(`${stock.nombre} (${stock.nemotecnico})`));
+        container.append(label);
+      });
+    }
+    function accionesSeleccionadas() {
+      return [...document.querySelectorAll('input[name="selectedStock"]:checked')].map(input => acciones[Number(input.value)]).filter(Boolean);
+    }
+    function datosBase() {
+      const selected = accionesSeleccionadas();
+      const source = document.getElementById("returnSource").value;
+      const rates = selected.map(stock => source === "custom" ? Number(document.getElementById("customReturn").value) : Number(stock[tasas[source]]) || 0);
+      const vols = selected.map(stock => Number(stock.volatilidad_anual_pct) / 100 || 0);
+      return {
+        stocks: selected,
+        r: rates.reduce((sum, value) => sum + value, 0) / Math.max(1, rates.length) / 100,
+        sigma: vols.reduce((sum, value) => sum + value, 0) / Math.max(1, vols.length)
+      };
+    }
+    function actualizarFuenteRentabilidad() {
+      const base = datosBase();
+      document.getElementById("returnSource").setAttribute("aria-label", `Rentabilidad base promedio de ${base.stocks.length || 0} acciones seleccionadas`);
+      if (ultimaSimulacion) calcularSimulacion();
+    }
+
+    // Campos que cambian según el modo de cálculo elegido.
+    const campos = {
+      future: [
+        { id: "initial", label: "Capital inicial", type: "number", value: 1000000, min: 0, step: 10000 },
+        { id: "contribution", label: "Aporte mensual (opcional)", type: "number", value: 0, min: 0, step: 10000 },
+        { id: "years", label: "Años", type: "number", value: 5, min: .1, step: .1 }
+      ],
+      capital: [
+        { id: "goal", label: "Meta", type: "number", value: 10000000, min: 1, step: 10000 },
+        { id: "years", label: "Años", type: "number", value: 5, min: .1, step: .1 },
+        { id: "contribution", label: "Aporte mensual (opcional)", type: "number", value: 0, min: 0, step: 10000 }
+      ],
+      time: [
+        { id: "initial", label: "Capital inicial", type: "number", value: 1000000, min: 0, step: 10000 },
+        { id: "goal", label: "Meta", type: "number", value: 10000000, min: 1, step: 10000 },
+        { id: "contribution", label: "Aporte mensual (opcional)", type: "number", value: 100000, min: 0, step: 10000 }
+      ],
+      monthly: [
+        { id: "initial", label: "Capital inicial", type: "number", value: 1000000, min: 0, step: 10000 },
+        { id: "goal", label: "Meta", type: "number", value: 10000000, min: 1, step: 10000 },
+        { id: "years", label: "Años", type: "number", value: 5, min: .1, step: .1 }
+      ]
+    };
+    function renderInputs() {
+      const container = document.getElementById("simInputs");
+      container.replaceChildren();
+      campos[modoActual].forEach(field => {
+        const label = document.createElement("label");
+        label.className = "field";
+        label.textContent = field.label;
+        const input = document.createElement("input");
+        input.id = field.id;
+        input.type = field.type;
+        input.value = String(field.value);
+        input.min = String(field.min);
+        input.step = String(field.step);
+        input.required = true;
+        input.inputMode = "decimal";
+        label.append(input);
+        container.append(label);
+      });
+    }
+    document.querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", () => {
+      modoActual = tab.dataset.mode;
+      document.querySelectorAll(".tab").forEach(item => item.setAttribute("aria-selected", String(item === tab)));
+      document.getElementById("simResults").replaceChildren();
+      document.getElementById("simMessage").replaceChildren();
+      if (graficoSimulacion) { graficoSimulacion.destroy(); graficoSimulacion = null; }
+      ultimaSimulacion = null;
+      renderInputs();
+    }));
+    document.getElementById("returnSource").addEventListener("change", event => {
+      document.getElementById("customReturnField").hidden = event.target.value !== "custom";
+      actualizarFuenteRentabilidad();
+    });
+    document.getElementById("customReturn").addEventListener("input", actualizarFuenteRentabilidad);
+
+    // Funciones financieras con aportes al final de cada mes.
+    function factorAportes(i, months) {
+      if (Math.abs(i) < 1e-12) return months;
+      return ((1 + i) ** months - 1) / i;
+    }
+    function valorFuturo(capital, aporte, r, years) {
+      const months = Math.round(years * 12);
+      const i = (1 + r) ** (1 / 12) - 1;
+      if (!Number.isFinite(i) || r <= -1) return NaN;
+      return capital * (1 + r) ** (months / 12) + aporte * factorAportes(i, months);
+    }
+    function tiempoMeta(capital, meta, aporte, r) {
+      if (capital >= meta) return 0;
+      if (r <= 0 && aporte <= 0) return null;
+      const i = (1 + r) ** (1 / 12) - 1;
+      if (!Number.isFinite(i)) return null;
+      let value = capital;
+      for (let month = 1; month <= 1200; month++) {
+        value = value * (1 + i) + aporte;
+        if (value >= meta) return month;
+      }
+      return null;
+    }
+    function proyectar(r, params) {
+      const { initial, contribution, goal, years } = params;
+      if (modoActual === "future") return { amount: valorFuturo(initial, contribution, r, years), years, monthly: contribution, initial };
+      if (modoActual === "capital") {
+        const months = Math.round(years * 12);
+        const i = (1 + r) ** (1 / 12) - 1;
+        if (r <= -1 || !Number.isFinite(i)) return { error: "La rentabilidad debe ser mayor que -100 % efectivo anual." };
+        const factor = factorAportes(i, months);
+        const required = (goal - contribution * factor) / (1 + r) ** years;
+        const enough = required < 0;
+        return { amount: goal, years, monthly: contribution, initial: Math.max(0, required), requiredInitial: Math.max(0, required), enough, error: !Number.isFinite(required) ? "No es posible calcular el capital con estos datos." : null };
+      }
+      if (modoActual === "time") {
+        const months = tiempoMeta(initial, goal, contribution, r);
+        return months === null ? { error: "Con esta rentabilidad y este aporte, la meta no se alcanza en 100 años." }
+          : { amount: goal, years: months / 12, months, monthly: contribution, initial };
+      }
+      const months = Math.round(years * 12);
+      const i = (1 + r) ** (1 / 12) - 1;
+      if (r <= -1 || !Number.isFinite(i)) return { error: "La rentabilidad debe ser mayor que -100 % efectivo anual." };
+      const numerator = goal - initial * (1 + r) ** years;
+      const denominator = factorAportes(i, months);
+      const requiredContribution = denominator > 0 ? numerator / denominator : NaN;
+      return { amount: goal, years, monthly: Math.max(0, requiredContribution), initial, error: !Number.isFinite(requiredContribution) ? "No es posible calcular el aporte con estos datos." : null, enough: requiredContribution < 0 };
+    }
+    function leerParametros() {
+      const read = id => Number(document.getElementById(id)?.value);
+      if (campos[modoActual].some(field => !Number.isFinite(read(field.id)))) throw new Error("Complete los campos con valores numéricos válidos.");
+      const params = {
+        initial: read("initial") || 0,
+        contribution: read("contribution") || 0,
+        goal: read("goal") || 0,
+        years: read("years") || 0
+      };
+      if (params.initial < 0 || params.contribution < 0 || params.goal < 0 || params.years < 0) throw new Error("Use valores iguales o mayores que cero.");
+      if ((modoActual === "future" || modoActual === "capital" || modoActual === "monthly") && params.years <= 0) throw new Error("El plazo debe ser mayor que cero.");
+      if ((modoActual === "capital" || modoActual === "time" || modoActual === "monthly") && params.goal <= 0) throw new Error("La meta debe ser mayor que cero.");
+      return params;
+    }
+    function rendimientosEscenarios(r, sigma, years) {
+      const root = Math.sqrt(Math.max(years, 1 / 12));
+      return { pesimista: r - sigma / root, esperado: r, optimista: r + sigma / root };
+    }
+    function resultadoTiempo(meses) {
+      if (meses === 0) return "0 meses (meta ya alcanzada)";
+      const years = Math.floor(meses / 12);
+      const remaining = meses % 12;
+      return `${years} ${years === 1 ? "año" : "años"} y ${remaining} ${remaining === 1 ? "mes" : "meses"}`;
+    }
+    function valorAportado(projected, params) {
+      const initial = projected.initial ?? params.initial;
+      const years = projected.years ?? params.years;
+      const monthly = projected.monthly ?? params.contribution;
+      return initial + monthly * Math.round(years * 12);
+    }
+
+    // Cálculo de escenarios, CDT, rentabilidad real, títulos enteros y gráfico anual.
+    function calcularSimulacion() {
+      const message = document.getElementById("simMessage");
+      const results = document.getElementById("simResults");
+      message.replaceChildren();
+      results.replaceChildren();
+      try {
+        const base = datosBase();
+        if (!base.stocks.length) throw new Error("Seleccione al menos una acción.");
+        if (document.getElementById("returnSource").value === "custom" &&
+            (!document.getElementById("customReturn").value.trim() || !Number.isFinite(Number(document.getElementById("customReturn").value)))) {
+          throw new Error("Ingrese una rentabilidad personalizada válida.");
+        }
+        const params = leerParametros();
+        const expected = proyectar(base.r, params);
+        if (expected.error) throw new Error(expected.error);
+        const yearsForScenario = expected.years || params.years || 1 / 12;
+        const rates = rendimientosEscenarios(base.r, base.sigma, yearsForScenario);
+        const scenarioResults = {};
+        Object.entries(rates).forEach(([name, rate]) => { scenarioResults[name] = proyectar(rate, params); });
+        const invalid = Object.values(scenarioResults).find(result => result.error);
+        if (invalid) throw new Error(invalid.error);
+        if (base.r <= 0) {
+          const note = document.createElement("p");
+          note.className = "small";
+          note.textContent = "La rentabilidad base es 0 % o negativa; revise este supuesto. El cálculo de aportes con tasa mensual cero usa la suma simple.";
+          message.append(note);
+        }
+        const display = document.createElement("div");
+        const title = document.createElement("h3");
+        title.textContent = "Resultado estimado";
+        display.append(title);
+        if (expected.enough && modoActual === "capital") {
+          const note = document.createElement("p");
+          note.textContent = "Los aportes programados bastan para alcanzar la meta; el capital necesario hoy se muestra como $ 0.";
+          display.append(note);
+        }
+        if (expected.enough && modoActual === "monthly") {
+          const note = document.createElement("p");
+          note.textContent = "El capital inicial ya supera la meta proyectada; el aporte mensual necesario se muestra como $ 0.";
+          display.append(note);
+        }
+        const scenarioGrid = document.createElement("div");
+        scenarioGrid.className = "scenario-grid";
+        [["pesimista", "Pesimista"], ["esperado", "Esperado"], ["optimista", "Optimista"]].forEach(([key, label]) => {
+          const box = document.createElement("article");
+          box.className = "scenario";
+          const heading = document.createElement("h3");
+          heading.textContent = `${label} (${porcentaje(rates[key] * 100)} EA)`;
+          const value = document.createElement("strong");
+          if (modoActual === "time") value.textContent = resultadoTiempo(scenarioResults[key].months);
+          else if (modoActual === "capital") value.textContent = dinero(scenarioResults[key].requiredInitial);
+          else if (modoActual === "monthly") value.textContent = `${dinero(scenarioResults[key].monthly)} / mes`;
+          else value.textContent = dinero(scenarioResults[key].amount);
+          box.append(heading, value);
+          scenarioGrid.append(box);
+        });
+        display.append(scenarioGrid);
+        const expectedResult = scenarioResults.esperado;
+        const initialForShares = modoActual === "capital" ? expectedResult.initial : params.initial;
+        const eachShareBudget = initialForShares / base.stocks.length;
+        const shareInfo = base.stocks.map(stock => {
+          const count = Number(stock.precio) > 0 ? Math.floor(eachShareBudget / Number(stock.precio)) : 0;
+          return `${stock.nemotecnico}: ${formatoNumero.format(count)} entera(s), sobrante ${dinero(eachShareBudget - count * Number(stock.precio))}`;
+        });
+        const invested = valorAportado(expectedResult, params);
+        const finalValue = modoActual === "time" ? expectedResult.amount : modoActual === "capital" ? params.goal : modoActual === "monthly" ? params.goal : expectedResult.amount;
+        const cdtRate = CONFIG.tasaCDT;
+        const cdtValue = valorFuturo(initialForShares, expectedResult.monthly, cdtRate, expectedResult.years || params.years);
+        const realRate = (1 + base.r) / (1 + CONFIG.inflacion) - 1;
+        const metrics = [
+          ["Tiempo estimado", modoActual === "time" ? resultadoTiempo(expectedResult.months) : `${formatoNumero.format(expectedResult.years)} años`],
+          ["Total aportado (escenario esperado)", dinero(invested)],
+          ["Ganancia estimada (esperado)", dinero(finalValue - invested)],
+          ["Rentabilidad real anual vs. inflación", porcentaje(realRate * 100)],
+          [`Valor de referencia con CDT (${porcentaje(cdtRate * 100)} EA)`, Number.isFinite(cdtValue) ? dinero(cdtValue) : "No disponible"],
+          ["Compra hoy con el capital inicial", shareInfo.join(" · ")]
+        ];
+        const metricGrid = document.createElement("div");
+        metricGrid.className = "result-grid";
+        metrics.forEach(([label, value]) => {
+          const card = document.createElement("div");
+          card.className = "metric";
+          const caption = document.createElement("span");
+          caption.textContent = label;
+          const strong = document.createElement("strong");
+          strong.textContent = value;
+          card.append(caption, strong);
+          metricGrid.append(card);
+        });
+        display.append(metricGrid);
+        const explanation = document.createElement("p");
+        explanation.className = "small";
+        explanation.textContent = "Los escenarios representan un rango aproximado y no una garantía. El CDT y la inflación son supuestos editables en CONFIG; la comparación no incorpora impuestos, costos ni cambios de tasa.";
+        display.append(explanation);
+        results.append(display);
+        ultimaSimulacion = { base, params, rates };
+        renderGraficoSimulacion(ultimaSimulacion);
+      } catch (error) {
+        const paragraph = document.createElement("p");
+        paragraph.className = "error-text";
+        paragraph.textContent = error.message || "No fue posible calcular la simulación.";
+        message.append(paragraph);
+        ultimaSimulacion = null;
+        if (graficoSimulacion) { graficoSimulacion.destroy(); graficoSimulacion = null; }
+      }
+    }
+    function renderGraficoSimulacion(simulation) {
+      const { params, rates } = simulation;
+      const years = modoActual === "time" ? (proyectar(simulation.base.r, params).years || 1) : params.years;
+      const maxYears = Math.max(1, Math.min(100, Math.ceil(years)));
+      const labels = Array.from({ length: maxYears + 1 }, (_, index) => `Año ${index}`);
+      const monthly = modoActual === "monthly" ? proyectar(simulation.base.r, params).monthly : params.contribution;
+      const initial = modoActual === "capital" ? proyectar(simulation.base.r, params).initial : params.initial;
+      const series = rate => labels.map((_, year) => {
+        const elapsed = Math.min(year, years);
+        return valorFuturo(initial, monthly, rate, elapsed);
+      });
+      const contributed = labels.map((_, year) => initial + monthly * Math.round(Math.min(year, years) * 12));
+      if (graficoSimulacion) graficoSimulacion.destroy();
+      graficoSimulacion = new Chart(document.getElementById("simulationChart"), {
+        type: "line",
+        data: { labels, datasets: [
+          { label: "Pesimista", data: series(rates.pesimista), borderColor: "#c62828", tension: .2 },
+          { label: "Esperado", data: series(rates.esperado), borderColor: "#16234F", tension: .2 },
+          { label: "Optimista", data: series(rates.optimista), borderColor: "#2E9E5B", tension: .2 },
+          { label: "Total aportado", data: contributed, borderColor: "#8a8f99", borderDash: [5, 5], tension: 0 }
+        ] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { tooltip: { callbacks: { label: context => `${context.dataset.label}: ${dinero(context.raw)}` } } }, scales: { y: { ticks: { callback: value => dinero(value) } } } }
+      });
+    }
+
+    // Botones, reinicio y fecha del proyecto.
+    document.getElementById("calculateBtn").addEventListener("click", calcularSimulacion);
+    document.getElementById("prevQuestion").addEventListener("click", () => { if (preguntaActual > 0) { preguntaActual--; mostrarPregunta(); } });
+    document.getElementById("nextQuestion").addEventListener("click", () => {
+      if (respuestasPerfil[preguntaActual] === null) return;
+      if (preguntaActual < CONFIG.preguntasPerfil.length - 1) { preguntaActual++; mostrarPregunta(); }
+      else mostrarPerfil();
+    });
+    document.getElementById("printBtn").addEventListener("click", () => window.print());
+    document.getElementById("restartBtn").addEventListener("click", () => window.location.reload());
+    document.getElementById("projectDate").textContent = CONFIG.fechaProyecto || fechaHoy();
+    renderEquipo();
+    mostrarPregunta();
+    cargarDatos();
+  </script>
+</body>
+</html>
