@@ -13,15 +13,15 @@ import pandas as pd
 import yfinance as yf
 
 
-# Tickers Yahoo Finance propuestos; verifique disponibilidad y cámbielos si su equipo valida otros.
+# Tickers Yahoo Finance verificados para la BVC; si una acción deja de cotizar, el script la registra en "errores" y continúa.
 ACCIONES = [
     {"ticker": "ECOPETROL.CL", "nombre": "Ecopetrol", "nemotecnico": "ECOPETROL", "sector": "Petróleo y gas"},
-    {"ticker": "PFBCOLOM.CL", "nombre": "Grupo Cibest (preferencial)", "nemotecnico": "PFBCOLOM", "sector": "Financiero"},
-    {"ticker": "BCOLOMBIA.CL", "nombre": "Grupo Cibest", "nemotecnico": "BCOLOMBIA", "sector": "Financiero"},
-    {"ticker": "ISA.CL", "nombre": "Interconexión Eléctrica", "nemotecnico": "ISA", "sector": "Energía e infraestructura"},
-    {"ticker": "GRUPOSURA.CL", "nombre": "Grupo SURA", "nemotecnico": "GRUPOSURA", "sector": "Financiero"},
+    {"ticker": "PFCIBEST.CL", "nombre": "Grupo Cibest (preferencial)", "nemotecnico": "PFCIBEST", "sector": "Financiero"},
+    {"ticker": "CIBEST.CL", "nombre": "Grupo Cibest (ordinaria)", "nemotecnico": "CIBEST", "sector": "Financiero"},
+    {"ticker": "ISA.CL", "nombre": "ISA", "nemotecnico": "ISA", "sector": "Energía e infraestructura"},
+    {"ticker": "PFAVAL.CL", "nombre": "Grupo Aval (preferencial)", "nemotecnico": "PFAVAL", "sector": "Financiero"},
+    {"ticker": "GRUPOSURA.CL", "nombre": "Grupo Sura", "nemotecnico": "GRUPOSURA", "sector": "Financiero"},
     {"ticker": "GRUPOARGOS.CL", "nombre": "Grupo Argos", "nemotecnico": "GRUPOARGOS", "sector": "Materiales e infraestructura"},
-    {"ticker": "CEMARGOS.CL", "nombre": "Cementos Argos", "nemotecnico": "CEMARGOS", "sector": "Materiales"},
     {"ticker": "CELSIA.CL", "nombre": "Celsia", "nemotecnico": "CELSIA", "sector": "Energía"},
 ]
 
@@ -73,9 +73,13 @@ def actualizar_accion(datos: dict[str, str]) -> dict[str, object]:
     anterior_close = numero(frame["Close"].iloc[-2], "Close anterior")
     variacion_dia = (ultimo_close / anterior_close - 1) * 100
 
-    hace_un_ano = ultimo_dia - pd.Timedelta(days=365)
-    indice_un_ano = (frame.index - hace_un_ano).to_series().abs().idxmin()
-    adj_un_ano = numero(frame.loc[indice_un_ano, "Adj Close"], "Adj Close de hace un año")
+    hace_un_ano = ultimo_dia - pd.DateOffset(years=1)
+    ultimo_ano = frame[frame.index >= hace_un_ano]
+    if ultimo_ano.empty:
+        raise ValueError("No hay historial suficiente para 1 año")
+
+    fecha_proxima = ultimo_ano.index[0]
+    adj_un_ano = numero(ultimo_ano["Adj Close"].iloc[0], "Adj Close de hace un año")
     rentabilidad_un_ano = (ultimo_adj / adj_un_ano - 1) * 100
 
     primer_adj = numero(frame["Adj Close"].iloc[0], "Primer Adj Close")
@@ -84,25 +88,24 @@ def actualizar_accion(datos: dict[str, str]) -> dict[str, object]:
         raise ValueError("El historial no cubre un periodo positivo")
     rentabilidad_anual = ((ultimo_adj / primer_adj) ** (1 / anos) - 1) * 100
 
-    desde_un_ano = frame.loc[frame.index >= hace_un_ano]
-    log_returns = (desde_un_ano["Adj Close"] / desde_un_ano["Adj Close"].shift(1)).apply(
+    log_returns = (ultimo_ano["Adj Close"] / ultimo_ano["Adj Close"].shift(1)).apply(
         lambda value: math.log(value) if pd.notna(value) and value > 0 else float("nan")
     ).dropna()
     if len(log_returns) < 2:
         raise ValueError("No hay rendimientos diarios suficientes para estimar volatilidad")
     volatilidad = float(log_returns.std(ddof=1) * math.sqrt(252) * 100)
 
-    adjusted_last_year = desde_un_ano["Adj Close"]
+    adjusted_last_year = ultimo_ano["Adj Close"]
     drawdown = adjusted_last_year / adjusted_last_year.cummax() - 1
     max_drawdown = float(drawdown.min() * 100)
     dividends = pd.to_numeric(frame["Dividends"], errors="coerce").fillna(0)
     dividends_year = float(dividends.loc[dividends.index >= hace_un_ano].sum())
     dividend_yield = dividends_year / ultimo_close * 100
 
-    monthly_close = frame["Close"].groupby(frame.index.to_period("M")).last().tail(36)
+    monthly_close = frame["Close"].resample("ME").last().dropna().tail(36)
     history = [
-        {"mes": str(month), "cierre": round(numero(close, "Cierre mensual"), 2)}
-        for month, close in monthly_close.items()
+        {"mes": item.strftime("%Y-%m"), "cierre": round(numero(close, "Cierre mensual"), 2)}
+        for item, close in monthly_close.items()
     ]
 
     def redondear(value: float) -> float:
